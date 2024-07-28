@@ -1,4 +1,8 @@
 import { useForm } from 'react-hook-form';
+import { Bounce, toast } from 'react-toastify';
+// ---------------------------------------------------------
+import { useEffect } from 'react';
+// ---------------------------------------------------------
 import Errors from './Errors';
 import { DrawftPatient } from '../types';
 import { usePatientsStore } from '../store/store';
@@ -6,22 +10,69 @@ import { usePatientsStore } from '../store/store';
 
 export default function PatientForm() {
 
-    const{
+    const {
         addPatient,
-        } = usePatientsStore()
+        activeID,
+        patients,
+        uppdatePatient
+    } = usePatientsStore()
 
     const {
         register,
         handleSubmit,
         formState: { errors },
-        reset
+        reset,
+        setValue
     } = useForm<DrawftPatient>()
 
 
-    const patientRegistered = (data:DrawftPatient) => {
-        addPatient(data)
+    const patientRegistered = (data: DrawftPatient) => {
+
+        if(activeID){
+            uppdatePatient(data);
+            toast.info('paciente editado 🐶', {
+                position: 'top-right',
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+                transition: Bounce,
+                });
+        }else{
+            addPatient(data)
+            toast.success('paciente agregado 🐶', {
+                position: 'top-right',
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+                transition: Bounce,
+                });
+        }
+        
         reset()
     }
+
+    useEffect(() => {
+
+        if (activeID) {
+
+            const activePatient = patients.filter((patient) => activeID === patient.id)[0]
+            setValue('name', activePatient.name);
+            setValue('caretaker', activePatient.caretaker);
+            setValue('email', activePatient.email);
+            setValue('date', activePatient.date);
+            setValue('symptoms', activePatient.symptoms);
+        }
+    }
+
+        , [activeID])
 
     return (
         <>
@@ -102,7 +153,7 @@ export default function PatientForm() {
                             className="w-full p-3  border border-gray-100"
                             type="date"
                             {...register('date',
-                                {required: 'la fecha de alta es obligatoria'})}
+                                { required: 'la fecha de alta es obligatoria' })}
                         />
                         {errors.date && (<Errors>{errors.date?.message?.toString()}</Errors>)}
                     </div>
@@ -116,7 +167,7 @@ export default function PatientForm() {
                             className="w-full p-3  border border-gray-100"
                             placeholder="Síntomas del paciente"
                             {...register('symptoms',
-                                {required: 'los sintomas son obligatorios'})}
+                                { required: 'los sintomas son obligatorios' })}
                         ></textarea>
                         {errors.symptoms && (<Errors>{errors.symptoms?.message?.toString()}</Errors>)}
                     </div>
@@ -124,7 +175,7 @@ export default function PatientForm() {
                     <input
                         type="submit"
                         className="bg-indigo-600 w-full p-3 text-white uppercase font-bold hover:bg-indigo-700 cursor-pointer transition-colors"
-                        value='Guardar Paciente'
+                        value={activeID!==''?'Editar Paciente':'Guardar Paciente'}
                     />
                 </form>
             </div>
